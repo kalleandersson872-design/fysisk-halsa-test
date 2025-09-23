@@ -9,25 +9,82 @@
       --bg:#0b0f1a; --card:#131a2a; --muted:#6b7280; --text:#f3f4f6; --ok:#34d399; --warn:#f59e0b; --bad:#ef4444;
       --bar:#2563eb; --bar-muted:#1f2937;
     }
+    *{box-sizing:border-box}
     body{
-      margin:0; font-family:system-ui,Arial,sans-serif;
+      margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Helvetica,Arial,sans-serif;
       background:linear-gradient(120deg,#0b0f1a 0%, #0f172a 100%); color:var(--text);
       min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px;
     }
     .wrap{width:100%; max-width:880px}
-    .card{background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.02));
-      border:1px solid rgba(255,255,255,.08); border-radius:18px; box-shadow:0 10px 30px rgba(0,0,0,.35)}
-    header{padding:22px 24px; border-bottom:1px solid rgba(255,255,255,.06); display:flex; justify-content:space-between}
+    .card{
+      background:linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+      border:1px solid rgba(255,255,255,0.08); border-radius:18px; box-shadow:0 10px 30px rgba(0,0,0,0.35);
+      overflow:hidden;
+    }
+    header{
+      padding:22px 24px; border-bottom:1px solid rgba(255,255,255,0.06);
+      display:flex; align-items:center; gap:14px; justify-content:space-between; flex-wrap:wrap;
+    }
+    .title{font-weight:700; letter-spacing:.2px; font-size:18px}
+    .badge{font-size:12px; color:#cbd5e1; background:#0b1220; border:1px solid rgba(255,255,255,.08); padding:6px 10px; border-radius:999px}
     .content{padding:28px}
-    .progress{height:10px; background:rgba(255,255,255,.06); border-radius:999px; overflow:hidden; margin-bottom:18px}
-    .progress>div{height:100%; width:0%; background:linear-gradient(90deg,#60a5fa,#a78bfa)}
-    .row{display:grid; grid-template-columns:160px 1fr 52px; gap:12px; align-items:center; margin:10px 0}
+    .progress{
+      height:10px; background:rgba(255,255,255,0.06); border-radius:999px; overflow:hidden; margin-bottom:18px; position:relative;
+    }
+    .progress > div{height:100%; width:0%; background:linear-gradient(90deg,#60a5fa,#a78bfa); transition:width .3s ease}
+    .qnum{font-size:14px; color:var(--muted); margin:6px 0 2px}
+    h2{margin:6px 0 18px; font-size:22px; line-height:1.3}
+    .scale{display:grid; grid-template-columns:repeat(5,1fr); gap:12px; margin:18px 0 6px}
+    .scale input{display:none}
+    .opt{
+      display:flex; align-items:center; justify-content:center; gap:8px;
+      padding:16px 10px; border-radius:14px; background:#0c1424; border:1px solid rgba(255,255,255,0.08);
+      cursor:pointer; user-select:none; transition:transform .04s ease, border-color .2s ease, background .2s ease;
+      min-height:56px; text-align:center;
+    }
+    .opt:hover{transform:translateY(-1px); border-color:rgba(96,165,250,.7)}
+    .scale input:checked + .opt{outline:2px solid rgba(96,165,250,.9); border-color:transparent; background:linear-gradient(180deg,rgba(96,165,250,.15),rgba(96,165,250,.05))}
+    .legend{display:flex; justify-content:space-between; font-size:12px; color:#9ca3af; margin-top:6px}
+    .nav{margin-top:24px; display:flex; gap:12px; flex-wrap:wrap}
+    button{
+      appearance:none; border:none; padding:12px 16px; border-radius:12px; font-weight:600; cursor:pointer;
+      background:#0c1424; color:var(--text); border:1px solid rgba(255,255,255,0.08)
+    }
+    .primary{background:linear-gradient(90deg,#2563eb,#7c3aed); border:none}
+    button:disabled{opacity:.5; cursor:not-allowed}
+    .muted{color:var(--muted); font-size:12px; margin-top:6px}
+    .hidden{display:none}
+    /* Results */
+    .grid{display:grid; grid-template-columns:1fr; gap:16px}
+    .stat{
+      background:#0c1424; border:1px solid rgba(255,255,255,0.08); border-radius:14px; padding:16px
+    }
+    .stat h3{margin:0 0 8px; font-size:16px}
     .bar{height:14px; background:var(--bar-muted); border-radius:10px; overflow:hidden}
-    .bar>div{height:100%; width:0%; background:linear-gradient(90deg,#2563eb,#60a5fa)}
-    details{background:#0b1220; border:1px solid rgba(255,255,255,.08); border-radius:12px; padding:10px 12px}
-    summary{cursor:pointer; font-weight:bold}
-    .footer{padding:16px 24px; border-top:1px solid rgba(255,255,255,.06); display:flex; justify-content:space-between}
-    @media print{details{background:white; border:1px solid #ccc} summary{display:none}}
+    .bar > div{height:100%; width:0%; background:linear-gradient(90deg,#2563eb,#60a5fa); transition:width .6s ease}
+    .row{display:grid; grid-template-columns:160px 1fr 52px; gap:12px; align-items:center; margin:10px 0}
+    /* Accordion (single details) */
+    details{
+      background:#0b1220; border:1px solid rgba(255,255,255,0.08);
+      border-radius:12px; margin:10px 0; padding:10px 12px;
+    }
+    summary{cursor:pointer; font-weight:700}
+    .answers{margin:6px 0 0 18px; padding:0}
+    .answers li{margin:8px 0; line-height:1.4}
+    .footer{padding:16px 24px; border-top:1px solid rgba(255,255,255,0.06); display:flex; gap:12px; justify-content:space-between; align-items:center; flex-wrap:wrap}
+    a.link{color:#93c5fd; text-decoration:none}
+
+    /* Utskrift */
+    @media print{
+      body{background:white; color:black}
+      .card{border:none; box-shadow:none}
+      header .badge, .nav, .footer a, .footer button, .progress{display:none !important}
+      .content{padding:0}
+      .stat{background:white; border:none; padding:0}
+      .row{grid-template-columns:200px 1fr 60px}
+      details{background:white; border:1px solid #ddd}
+      .footer{display:none}
+    }
   </style>
 </head>
 <body>
@@ -35,135 +92,334 @@
   <div class="card">
     <header>
       <div class="title">Fysisk hälsa – Skattningstest</div>
-      <div id="badge">1/25</div>
+      <div class="badge" id="badge">1/25</div>
     </header>
 
     <div class="content" id="screen-test">
-      <div class="progress"><div id="progressBar"></div></div>
-      <div id="qIndex">Fråga 1 av 25</div>
-      <h2 id="qText"></h2>
-      <form id="form"><div class="scale"></div></form>
+      <div class="progress" aria-label="Framsteg">
+        <div id="progressBar"></div>
+      </div>
+
+      <div class="qnum" id="qIndex">Fråga 1 av 25</div>
+      <h2 id="qText">…</h2>
+
+      <form id="form" aria-labelledby="qText">
+        <div class="scale" role="radiogroup" aria-label="Skattningsskala 1 till 5"></div>
+        <div class="legend">
+          <span>1 = stämmer inte alls</span>
+          <span>5 = stämmer helt</span>
+        </div>
+      </form>
+
       <div class="nav">
         <button id="btnPrev">Tillbaka</button>
-        <button id="btnNext">Nästa</button>
+        <button id="btnNext" class="primary" disabled>Nästa</button>
       </div>
+      <div class="muted">Svara på varje fråga för att fortsätta. Dina svar lagras endast i din webbläsare.</div>
     </div>
 
     <div class="content hidden" id="screen-results">
       <h2>Resultat</h2>
-      <div>
-        <h3>Totalpoäng</h3>
-        <div id="totalScore"></div>
-        <div class="bar"><div id="totalBar"></div></div>
-      </div>
-      <h3>Delområden</h3>
-      <div id="domains"></div>
+      <div class="grid">
+        <section class="stat">
+          <div class="qnum">Totalpoäng (0–100)</div>
+          <h3 id="totalScore">–</h3>
+          <div class="bar" aria-label="Totalpoäng">
+            <div id="totalBar"></div>
+          </div>
 
-      <details id="answersBlock">
-        <summary>Klicka för att visa alla frågor och svar</summary>
-        <ol id="answersList"></ol>
-      </details>
+          <h3 style="margin-top:18px">Delområden (0–100)</h3>
+          <div id="domains"></div>
+        </section>
+
+        <section class="stat">
+          <h3>Frågor & svar</h3>
+          <details id="answersBlock">
+            <summary>Klicka för att visa alla frågor och svar</summary>
+            <ol id="answersList" class="answers"></ol>
+          </details>
+          <div class="muted">Vid utskrift öppnas rullgardinen automatiskt.</div>
+        </section>
+      </div>
     </div>
 
     <div class="footer">
-      <button id="btnRestart">Starta om</button>
-      <button id="btnPrint">Skriv ut</button>
+      <div class="muted">© Fysisk hälsa – 25 frågor</div>
+      <div>
+        <button id="btnRestart">Starta om</button>
+        <button id="btnPrint">Skriv ut</button>
+        <a class="link" id="btnExport" href="#" download="fysisk-halsa-resultat.json">Exportera resultat</a>
+        <a class="link" id="btnExportTxt" href="#" download="fysisk-halsa-svar.txt">Exportera TXT</a>
+      </div>
     </div>
   </div>
 </div>
 
 <script>
-const QUESTIONS=[
- {t:"Jag äter regelbundet och får i mig tillräckligt med energi under dagen.",d:"Kost och energi"},
- {t:"Jag upplever att min kost är näringsrik och balanserad.",d:"Kost och energi"},
- {t:"Jag märker att det jag äter påverkar mitt humör och min ork på ett positivt sätt.",d:"Kost och energi"},
- {t:"Jag undviker ofta matvanor som jag vet försämrar min hälsa.",d:"Kost och energi"},
- {t:"Jag känner mig nöjd med mina matvanor just nu.",d:"Kost och energi"},
- {t:"Jag får tillräckligt med sömn för att känna mig utvilad.",d:"Sömn och återhämtning"},
- {t:"Jag har en kvällsrutin som gör det lättare att varva ner inför sömn.",d:"Sömn och återhämtning"},
- {t:"Jag sover ungefär samma tider varje dag.",d:"Sömn och återhämtning"},
- {t:"Jag vaknar oftast pigg och redo för dagen.",d:"Sömn och återhämtning"},
- {t:"Jag tar mig tid till återhämtning när min kropp behöver det.",d:"Sömn och återhämtning"},
- {t:"Jag rör på mig varje dag, även om det inte är träning.",d:"Fysisk aktivitet"},
- {t:"Jag tränar regelbundet (minst två gånger i veckan).",d:"Fysisk aktivitet"},
- {t:"Jag upplever att min träning/rörelse är rolig och motiverande.",d:"Fysisk aktivitet"},
- {t:"Jag känner mig stark och fysiskt kapabel i vardagen.",d:"Fysisk aktivitet"},
- {t:"Jag upplever att min kondition är tillräcklig för det jag vill göra.",d:"Fysisk aktivitet"},
- {t:"Jag har god balans mellan aktivitet och vila.",d:"Vanor och hinder"},
- {t:"Jag lyckas oftast hålla fast vid mina hälsorelaterade vanor.",d:"Vanor och hinder"},
- {t:"Jag upplever inte att tid är ett stort hinder för att ta hand om min fysiska hälsa.",d:"Vanor och hinder"},
- {t:"Jag har bra strategier för att hantera stress på ett hälsosamt sätt.",d:"Vanor och hinder"},
- {t:"Jag tycker att jag har kontroll över min fysiska hälsa i stort.",d:"Vanor och hinder"},
- {t:"Jag är nöjd med min nuvarande fysiska form.",d:"Vision och motivation"},
- {t:"Jag vet vilka små förändringar jag kan göra för att förbättra min hälsa.",d:"Vision och motivation"},
- {t:"Jag känner mig motiverad att utveckla min fysiska hälsa just nu.",d:"Vision och motivation"},
- {t:"Jag tror att förbättrad fysisk hälsa skulle påverka mitt liv positivt.",d:"Vision och motivation"},
- {t:"Jag prioriterar min fysiska hälsa i vardagen.",d:"Vision och motivation"},
-];
-const DOMAINS=["Kost och energi","Sömn och återhämtning","Fysisk aktivitet","Vanor och hinder","Vision och motivation"];
-const SCALE={1:"Stämmer inte alls",2:"Stämmer lite",3:"Neutral/delvis",4:"Stämmer mycket",5:"Stämmer helt"};
-let i=0,answers=new Array(QUESTIONS.length).fill(null);
-const els={
- badge:document.getElementById("badge"),progressBar:document.getElementById("progressBar"),
- qIndex:document.getElementById("qIndex"),qText:document.getElementById("qText"),
- form:document.getElementById("form"),btnPrev:document.getElementById("btnPrev"),
- btnNext:document.getElementById("btnNext"),screenTest:document.getElementById("screen-test"),
- screenResults:document.getElementById("screen-results"),totalScore:document.getElementById("totalScore"),
- totalBar:document.getElementById("totalBar"),domains:document.getElementById("domains"),
- answersList:document.getElementById("answersList"),answersBlock:document.getElementById("answersBlock"),
- btnRestart:document.getElementById("btnRestart"),btnPrint:document.getElementById("btnPrint")
-};
-// bygg skala
-const scaleDiv=document.createElement("div");
-for(let v=1;v<=5;v++){
- let r=document.createElement("input"); r.type="radio"; r.name="score"; r.id="opt"+v; r.value=v;
- let l=document.createElement("label"); l.innerHTML=v; l.setAttribute("for","opt"+v);
- scaleDiv.appendChild(r); scaleDiv.appendChild(l);
-}
-els.form.appendChild(scaleDiv);
+  // ----- Data -----
+  const QUESTIONS = [
+    // Kost och energi
+    { t: "Jag äter regelbundet och får i mig tillräckligt med energi under dagen.", d:"Kost och energi" },
+    { t: "Jag upplever att min kost är näringsrik och balanserad.", d:"Kost och energi" },
+    { t: "Jag märker att det jag äter påverkar mitt humör och min ork på ett positivt sätt.", d:"Kost och energi" },
+    { t: "Jag undviker ofta matvanor som jag vet försämrar min hälsa.", d:"Kost och energi" },
+    { t: "Jag känner mig nöjd med mina matvanor just nu.", d:"Kost och energi" },
 
-function renderQ(){
- const q=QUESTIONS[i]; els.qText.textContent=q.t;
- document.querySelectorAll("input[name=score]").forEach(r=>r.checked=false);
- if(answers[i]) document.getElementById("opt"+answers[i]).checked=true;
- els.qIndex.textContent=`Fråga ${i+1} av ${QUESTIONS.length}`;
- els.badge.textContent=`${i+1}/${QUESTIONS.length}`;
- els.btnPrev.disabled=i===0;
- els.btnNext.textContent=(i===QUESTIONS.length-1)?"Visa resultat":"Nästa";
- els.progressBar.style.width=(answers.filter(a=>a).length/QUESTIONS.length*100)+"%";
-}
-els.form.addEventListener("change",e=>{answers[i]=+e.target.value});
-els.btnPrev.onclick=()=>{if(i>0){i--;renderQ()}};
-els.btnNext.onclick=()=>{
- if(!answers[i]) return;
- if(i<QUESTIONS.length-1){i++;renderQ()} else showResults();
-};
+    // Sömn och återhämtning
+    { t: "Jag får tillräckligt med sömn för att känna mig utvilad.", d:"Sömn och återhämtning" },
+    { t: "Jag har en kvällsrutin som gör det lättare att varva ner inför sömn.", d:"Sömn och återhämtning" },
+    { t: "Jag sover ungefär samma tider varje dag.", d:"Sömn och återhämtning" },
+    { t: "Jag vaknar oftast pigg och redo för dagen.", d:"Sömn och återhämtning" },
+    { t: "Jag tar mig tid till återhämtning när min kropp behöver det.", d:"Sömn och återhämtning" },
 
-function norm(v){return ((v-1)/4)*100}
-function showResults(){
- els.screenTest.classList.add("hidden");
- els.screenResults.classList.remove("hidden");
- const total=answers.reduce((s,v)=>s+norm(v),0)/answers.length;
- els.totalScore.textContent=Math.round(total)+"/100";
- els.totalBar.style.width=Math.round(total)+"%";
- els.domains.innerHTML="";
- DOMAINS.forEach(d=>{
-   const vals=QUESTIONS.map((q,idx)=>q.d===d?norm(answers[idx]):null).filter(x=>x!=null);
-   const score=vals.reduce((s,v)=>s+v,0)/vals.length;
-   const row=document.createElement("div"); row.className="row";
-   row.innerHTML=`<div>${d}</div><div class="bar"><div style="width:${score.toFixed(0)}%"></div></div><div>${score.toFixed(0)}</div>`;
-   els.domains.appendChild(row);
- });
- els.answersList.innerHTML="";
- QUESTIONS.forEach((q,idx)=>{
-   const li=document.createElement("li");
-   const v=answers[idx]; li.textContent=`${q.t} — Svar: ${v} (${SCALE[v]})`;
-   els.answersList.appendChild(li);
- });
-}
-els.btnRestart.onclick=()=>{answers.fill(null);i=0;els.screenResults.classList.add("hidden");els.screenTest.classList.remove("hidden");renderQ()};
-els.btnPrint.onclick=()=>{els.answersBlock.open=true;window.print()};
-renderQ();
+    // Fysisk aktivitet
+    { t: "Jag rör på mig varje dag, även om det inte är träning.", d:"Fysisk aktivitet" },
+    { t: "Jag tränar regelbundet (minst två gånger i veckan).", d:"Fysisk aktivitet" },
+    { t: "Jag upplever att min träning/rörelse är rolig och motiverande.", d:"Fysisk aktivitet" },
+    { t: "Jag känner mig stark och fysiskt kapabel i vardagen.", d:"Fysisk aktivitet" },
+    { t: "Jag upplever att min kondition är tillräcklig för det jag vill göra.", d:"Fysisk aktivitet" },
+
+    // Vanor och hinder
+    { t: "Jag har god balans mellan aktivitet och vila.", d:"Vanor och hinder" },
+    { t: "Jag lyckas oftast hålla fast vid mina hälsorelaterade vanor.", d:"Vanor och hinder" },
+    { t: "Jag upplever inte att tid är ett stort hinder för att ta hand om min fysiska hälsa.", d:"Vanor och hinder" },
+    { t: "Jag har bra strategier för att hantera stress på ett hälsosamt sätt.", d:"Vanor och hinder" },
+    { t: "Jag tycker att jag har kontroll över min fysiska hälsa i stort.", d:"Vanor och hinder" },
+
+    // Vision och motivation
+    { t: "Jag är nöjd med min nuvarande fysiska form.", d:"Vision och motivation" },
+    { t: "Jag vet vilka små förändringar jag kan göra för att förbättra min hälsa.", d:"Vision och motivation" },
+    { t: "Jag känner mig motiverad att utveckla min fysiska hälsa just nu.", d:"Vision och motivation" },
+    { t: "Jag tror att förbättrad fysisk hälsa skulle påverka mitt liv positivt.", d:"Vision och motivation" },
+    { t: "Jag prioriterar min fysiska hälsa i vardagen.", d:"Vision och motivation" },
+  ];
+
+  const DOMAINS = [
+    "Kost och energi",
+    "Sömn och återhämtning",
+    "Fysisk aktivitet",
+    "Vanor och hinder",
+    "Vision och motivation",
+  ];
+
+  const SCALE_LABELS = {
+    1: "Stämmer inte alls",
+    2: "Stämmer lite",
+    3: "Neutral / delvis",
+    4: "Stämmer mycket",
+    5: "Stämmer helt"
+  };
+
+  // ----- State -----
+  let i = 0; // current question index
+  const answers = new Array(QUESTIONS.length).fill(null); // 1..5
+  const els = {
+    badge: document.getElementById("badge"),
+    progressBar: document.getElementById("progressBar"),
+    qIndex: document.getElementById("qIndex"),
+    qText: document.getElementById("qText"),
+    form: document.getElementById("form"),
+    scale: null, // created below
+    btnPrev: document.getElementById("btnPrev"),
+    btnNext: document.getElementById("btnNext"),
+    screenTest: document.getElementById("screen-test"),
+    screenResults: document.getElementById("screen-results"),
+    totalScore: document.getElementById("totalScore"),
+    totalBar: document.getElementById("totalBar"),
+    domains: document.getElementById("domains"),
+    answersBlock: document.getElementById("answersBlock"),
+    answersList: document.getElementById("answersList"),
+    btnRestart: document.getElementById("btnRestart"),
+    btnPrint: document.getElementById("btnPrint"),
+    btnExport: document.getElementById("btnExport"),
+    btnExportTxt: document.getElementById("btnExportTxt"),
+  };
+
+  // Skala 1–5
+  function buildScale(){
+    const wrap = document.createElement("div");
+    wrap.className = "scale";
+    for(let v=1; v<=5; v++){
+      const id = `opt-${v}`;
+      const input = document.createElement("input");
+      input.type = "radio"; input.name = "score"; input.id = id; input.value = v;
+
+      const label = document.createElement("label");
+      label.className = "opt"; label.setAttribute("for", id);
+      label.innerHTML = `<strong>${v}</strong>`;
+
+      wrap.appendChild(input); wrap.appendChild(label);
+    }
+    return wrap;
+  }
+  els.scale = buildScale();
+  els.form.querySelector(".scale")?.remove();
+  els.form.insertBefore(els.scale, els.form.firstChild);
+
+  function setProgress(){
+    const answered = answers.filter(a => a !== null).length;
+    const pct = Math.round((answered / QUESTIONS.length) * 100);
+    els.progressBar.style.width = pct + "%";
+    els.badge.textContent = `${Math.min(i+1, QUESTIONS.length)}/${QUESTIONS.length}`;
+    els.qIndex.textContent = `Fråga ${i+1} av ${QUESTIONS.length}`;
+  }
+
+  function renderQuestion(){
+    const q = QUESTIONS[i];
+    els.qText.textContent = q.t;
+
+    // rensa
+    [...els.form.querySelectorAll('input[name="score"]')].forEach(r => r.checked = false);
+
+    // återställ
+    if(answers[i] != null){
+      const sel = els.form.querySelector(`#opt-${answers[i]}`);
+      if(sel) sel.checked = true;
+    }
+
+    els.btnPrev.disabled = i === 0;
+    els.btnNext.textContent = (i === QUESTIONS.length - 1) ? "Visa resultat" : "Nästa";
+    els.btnNext.disabled = answers[i] == null;
+
+    setProgress();
+  }
+
+  // Event: val
+  els.form.addEventListener("change", (e)=>{
+    if(e.target && e.target.name === "score"){
+      answers[i] = Number(e.target.value);
+      els.btnNext.disabled = false;
+    }
+  });
+
+  els.btnPrev.addEventListener("click", ()=>{
+    if(i>0){ i--; renderQuestion(); }
+  });
+
+  els.btnNext.addEventListener("click", ()=>{
+    if(answers[i]==null) return;
+    if(i < QUESTIONS.length - 1){
+      i++; renderQuestion();
+    } else {
+      showResults();
+    }
+  });
+
+  // ----- Scoring -----
+  function normalize100(v){ // 1..5 -> 0..100
+    return ((v - 1) / 4) * 100;
+  }
+
+  function computeScores(){
+    const total = answers.reduce((s,v)=> s + normalize100(v), 0) / answers.length;
+    const byDomain = {};
+    DOMAINS.forEach(d => byDomain[d] = []);
+    QUESTIONS.forEach((q, idx) => byDomain[q.d].push(normalize100(answers[idx])));
+    const domainScores = DOMAINS.map(d => ({
+      name: d,
+      score: byDomain[d].reduce((s,v)=>s+v,0) / byDomain[d].length
+    }));
+    return { total, domainScores };
+  }
+
+  function showResults(){
+    const { total, domainScores } = computeScores();
+
+    // Växla vy
+    els.screenTest.classList.add("hidden");
+    els.screenResults.classList.remove("hidden");
+
+    const t = Math.round(total);
+    els.totalScore.textContent = `${t} / 100`;
+    els.totalBar.style.width = `${t}%`;
+
+    // Delområden
+    els.domains.innerHTML = "";
+    domainScores.forEach(d=>{
+      const row = document.createElement("div");
+      row.className = "row";
+      row.innerHTML = `
+        <div>${d.name}</div>
+        <div class="bar"><div style="width:${d.score.toFixed(0)}%"></div></div>
+        <div>${d.score.toFixed(0)}</div>
+      `;
+      els.domains.appendChild(row);
+    });
+
+    // Bygg rullgardinens lista + exportinnehåll
+    els.answersList.innerHTML = "";
+    const lines = [];
+    lines.push("FYSISK HÄLSA – 25 FRÅGOR (1–5)");
+    const ts = new Date().toISOString();
+    lines.push(`Tidsstämpel: ${ts}`);
+    lines.push(`Totalpoäng (0–100): ${t}`);
+    lines.push("Delområden:");
+    domainScores.forEach(d => lines.push(`- ${d.name}: ${Math.round(d.score)}`));
+    lines.push("");
+    lines.push("SVAR (fråga i klartext följt av siffersvar och etikett):");
+
+    QUESTIONS.forEach((q, idx) => {
+      const v = answers[idx];
+      const label = SCALE_LABELS[v] || "";
+      // Lista (för skärm/utskrift)
+      const li = document.createElement("li");
+      li.textContent = `Fråga ${idx+1} | ${q.d} | ${q.t} — Svar: ${v} (${label})`;
+      els.answersList.appendChild(li);
+      // TXT
+      lines.push(`Fråga ${idx+1} | ${q.d} | ${q.t}\nSvar: ${v} (${label})`);
+    });
+
+    // Spara JSON
+    const payload = { answers, total: t, domains: domainScores.map(d=>({name:d.name, score:Math.round(d.score)})), ts };
+    localStorage.setItem("fysisk_halsa_v1", JSON.stringify(payload));
+    const jsonUrl = URL.createObjectURL(new Blob([JSON.stringify(payload, null, 2)], {type:"application/json"}));
+    els.btnExport.href = jsonUrl;
+
+    // Skapa TXT (frågor + alla svar)
+    lines.push("");
+    lines.push("Format: Fråga N | Delområde | Frågetext  -> Svar: [1–5] (skalaetikett)");
+    const txtUrl = URL.createObjectURL(new Blob([lines.join("\n")], { type: "text/plain;charset=utf-8" }));
+    els.btnExportTxt.href = txtUrl;
+  }
+
+  // Starta om
+  els.btnRestart.addEventListener("click", ()=>{
+    for(let k=0;k<answers.length;k++) answers[k]=null;
+    i=0; els.screenResults.classList.add("hidden"); els.screenTest.classList.remove("hidden");
+    renderQuestion();
+  });
+
+  // Utskrift: öppna rullgardinen
+  function openAnswers(){ els.answersBlock.open = true; }
+  els.btnPrint.addEventListener("click", ()=>{
+    const allAnswered = answers.every(a => a !== null);
+    if(els.screenTest && !els.screenTest.classList.contains("hidden") && allAnswered){
+      showResults();
+      setTimeout(()=>{ openAnswers(); window.print(); }, 50);
+    } else if(els.screenResults && !els.screenResults.classList.contains("hidden")){
+      openAnswers(); window.print();
+    } else {
+      alert("Besvara alla frågor för att skriva ut resultat med alla svar.");
+    }
+  });
+  window.addEventListener('beforeprint', openAnswers);
+
+  // Tangentbord
+  document.addEventListener("keydown", (e)=>{
+    if(!els.screenResults.classList.contains("hidden")) return;
+    if(e.key>="1" && e.key<="5"){
+      const r = els.form.querySelector(`#opt-${e.key}`);
+      if(r){ r.checked = true; answers[i] = Number(e.key); els.btnNext.disabled = false; }
+    }
+    if(e.key === "Enter"){
+      e.preventDefault();
+      if(!els.btnNext.disabled) els.btnNext.click();
+    }
+    if(e.key === "Backspace"){ if(i>0) els.btnPrev.click(); }
+  });
+
+  // Init
+  renderQuestion();
 </script>
 </body>
 </html>
