@@ -65,12 +65,29 @@
     .row{display:grid; grid-template-columns:160px 1fr 52px; gap:12px; align-items:center; margin:10px 0}
     .kpi{display:flex; gap:12px; align-items:center; margin:2px 0 10px}
     .kpi .dot{width:10px; height:10px; border-radius:50%}
-    .answers{margin:6px 0 0 18px; padding:0}
-    .answers li{margin:8px 0; line-height:1.4}
+    /* Accordion styles */
+    .accordion details{
+      background:#0b1220; border:1px solid rgba(255,255,255,0.08);
+      border-radius:12px; margin:10px 0; padding:10px 12px;
+    }
+    .accordion summary{
+      cursor:pointer; list-style:none; outline:none;
+      display:flex; align-items:flex-start; gap:10px;
+    }
+    .accordion summary::-webkit-details-marker{display:none}
+    .chev{transition:transform .2s ease; margin-top:2px}
+    details[open] .chev{transform:rotate(90deg)}
+    .badge-score{
+      font-size:12px; padding:4px 8px; border-radius:999px; background:#0c1424; border:1px solid rgba(255,255,255,.1); color:#cbd5e1;
+      white-space:nowrap;
+    }
+    .qtext{color:#e5e7eb}
+    .qmeta{font-size:12px; color:#94a3b8}
+    .ans{margin-top:10px; color:#cbd5e1}
     .footer{padding:16px 24px; border-top:1px solid rgba(255,255,255,0.06); display:flex; gap:12px; justify-content:space-between; align-items:center; flex-wrap:wrap}
     a.link{color:#93c5fd; text-decoration:none}
 
-    /* Utskriftsvänligt */
+    /* Print */
     @media print{
       body{background:white; color:black}
       .card{border:none; box-shadow:none}
@@ -78,6 +95,7 @@
       .content{padding:0}
       .stat{background:white; border:none; padding:0}
       .row{grid-template-columns:200px 1fr 60px}
+      .accordion details{background:white; border:1px solid #ddd}
       .footer{display:none}
     }
   </style>
@@ -134,8 +152,8 @@
 
         <section class="stat">
           <h3>Svar per fråga</h3>
-          <ol id="answersList" class="answers"></ol>
-          <div class="muted">Varje rad visar frågenummer, delområde, frågetext och ditt siffersvar (1–5) med skalaetikett.</div>
+          <div id="answersAcc" class="accordion" aria-label="Rullgardinslista med frågor och svar"></div>
+          <div class="muted">Klicka på en rad för att visa frågetext och ditt siffersvar.</div>
         </section>
       </div>
     </div>
@@ -225,7 +243,7 @@
     totalBar: document.getElementById("totalBar"),
     domains: document.getElementById("domains"),
     dotScore: document.getElementById("dotScore"),
-    answersList: document.getElementById("answersList"),
+    answersAcc: document.getElementById("answersAcc"),
     btnRestart: document.getElementById("btnRestart"),
     btnPrint: document.getElementById("btnPrint"),
     btnExport: document.getElementById("btnExport"),
@@ -359,8 +377,9 @@
     const url = URL.createObjectURL(blob);
     els.btnExport.href = url;
 
-    // TXT export
-    let lines = [];
+    // Build Accordion + TXT
+    els.answersAcc.innerHTML = "";
+    const lines = [];
     lines.push("FYSISK HÄLSA – 25 FRÅGOR (1–5)");
     lines.push(`Tidsstämpel: ${payload.ts}`);
     lines.push(`Totalpoäng (0–100): ${payload.total}`);
@@ -368,17 +387,32 @@
     payload.domains.forEach(d => lines.push(`- ${d.name}: ${d.score}`));
     lines.push("");
     lines.push("SVAR (fråga i klartext följt av siffersvar och etikett):");
-    els.answersList.innerHTML = ""; // bygg listan för visning + utskrift
+
     QUESTIONS.forEach((q, idx) => {
       const v = answers[idx];
       const label = SCALE_LABELS[v] || "";
-      // För TXT
+      // TXT
       lines.push(`Fråga ${idx+1} | ${q.d} | ${q.t}\nSvar: ${v} (${label})`);
-      // För visning/utskrift
-      const li = document.createElement("li");
-      li.textContent = `Fråga ${idx+1} | ${q.d} | ${q.t} — Svar: ${v} (${label})`;
-      els.answersList.appendChild(li);
+      // Accordion
+      const det = document.createElement("details");
+      const sum = document.createElement("summary");
+      sum.innerHTML = `
+        <span class="chev">▶</span>
+        <span class="badge-score">Fråga ${idx+1}</span>
+        <span class="qmeta">| ${q.d}</span>
+        <span class="qmeta">| Svar: ${v} (${label})</span>
+      `;
+      const inner = document.createElement("div");
+      inner.className = "ans";
+      inner.innerHTML = `
+        <div class="qtext">${q.t}</div>
+        <div style="margin-top:8px">Ditt svar: <strong>${v}</strong> <span class="qmeta">(${label})</span></div>
+      `;
+      det.appendChild(sum);
+      det.appendChild(inner);
+      els.answersAcc.appendChild(det);
     });
+
     lines.push("");
     lines.push("Format: Fråga N | Delområde | Frågetext  -> Svar: [1–5] (skalaetikett)");
     const txtBlob = new Blob([lines.join("\n")], { type: "text/plain;charset=utf-8" });
@@ -386,31 +420,35 @@
     els.btnExportTxt.href = txtUrl;
   }
 
-  // Buttons footer
+  // Restart
   els.btnRestart.addEventListener("click", ()=>{
     for(let k=0;k<answers.length;k++) answers[k]=null;
     i=0; els.screenResults.classList.add("hidden"); els.screenTest.classList.remove("hidden");
     renderQuestion();
   });
 
+  // Print: öppna alla <details> innan utskrift
+  function openAllAccordions(){
+    document.querySelectorAll('details').forEach(d=> d.open = true);
+  }
   els.btnPrint.addEventListener("click", ()=>{
-    // Om alla frågor är besvarade och vi är kvar i testvyn, växla till resultat innan utskrift
     const allAnswered = answers.every(a => a !== null);
     if(els.screenTest && !els.screenTest.classList.contains("hidden") && allAnswered){
       showResults();
-      setTimeout(()=>window.print(), 50);
+      setTimeout(()=>{ openAllAccordions(); window.print(); }, 50);
     } else if(els.screenResults && !els.screenResults.classList.contains("hidden")){
+      openAllAccordions();
       window.print();
     } else {
       alert("Besvara alla frågor för att skriva ut resultat med alla svar.");
     }
   });
+  // Om användaren skriver ut via webbläsarmenyn:
+  window.addEventListener('beforeprint', openAllAccordions);
 
-  // Keyboard support: numbers 1..5 to select, Enter to next, Backspace to back
+  // Keyboard support
   document.addEventListener("keydown", (e)=>{
-    if(!els.screenResults.classList.contains("hidden")){
-      return; // inga specialtangenter i resultatläge
-    }
+    if(!els.screenResults.classList.contains("hidden")) return;
     if(e.key>="1" && e.key<="5"){
       const r = els.form.querySelector(`#opt-${e.key}`);
       if(r){ r.checked = true; answers[i] = Number(e.key); els.btnNext.disabled = false; }
