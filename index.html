@@ -88,9 +88,7 @@
       <h2 id="qText">…</h2>
 
       <form id="form" aria-labelledby="qText">
-        <div class="scale" role="radiogroup" aria-label="Skattningsskala 1 till 5">
-          <!-- Options will be injected -->
-        </div>
+        <div class="scale" role="radiogroup" aria-label="Skattningsskala 1 till 5"></div>
         <div class="legend">
           <span>1 = stämmer inte alls</span>
           <span>5 = stämmer helt</span>
@@ -139,6 +137,7 @@
         <button id="btnRestart">Starta om</button>
         <button id="btnPrint">Skriv ut</button>
         <a class="link" id="btnExport" href="#" download="fysisk-halsa-resultat.json">Exportera resultat</a>
+        <a class="link" id="btnExportTxt" href="#" download="fysisk-halsa-svar.txt">Exportera TXT</a>
       </div>
     </div>
   </div>
@@ -214,6 +213,7 @@
     btnRestart: document.getElementById("btnRestart"),
     btnPrint: document.getElementById("btnPrint"),
     btnExport: document.getElementById("btnExport"),
+    btnExportTxt: document.getElementById("btnExportTxt"),
   };
 
   // Build scale options (1..5)
@@ -334,14 +334,41 @@
       els.domains.appendChild(row);
     });
 
-    // Save to localStorage
+    // Save payload
     const payload = { answers, total: t, domains: domainScores.map(d=>({name:d.name, score:Math.round(d.score)})), ts: new Date().toISOString() };
     localStorage.setItem("fysisk_halsa_v1", JSON.stringify(payload));
 
-    // Export link
+    // ----- JSON export -----
     const blob = new Blob([JSON.stringify(payload, null, 2)], {type:"application/json"});
     const url = URL.createObjectURL(blob);
     els.btnExport.href = url;
+
+    // ----- TXT export -----
+    const SCALE_LABELS = {
+      1: "Stämmer inte alls",
+      2: "Stämmer lite",
+      3: "Neutral / delvis",
+      4: "Stämmer mycket",
+      5: "Stämmer helt"
+    };
+    let lines = [];
+    lines.push("FYSISK HÄLSA – 25 FRÅGOR (1–5)");
+    lines.push(`Tidsstämpel: ${payload.ts}`);
+    lines.push(`Totalpoäng (0–100): ${payload.total}`);
+    lines.push("Delområden:");
+    payload.domains.forEach(d => lines.push(`- ${d.name}: ${d.score}`));
+    lines.push("");
+    lines.push("SVAR (fråga i klartext följt av siffersvar och etikett):");
+    QUESTIONS.forEach((q, idx) => {
+      const v = answers[idx];
+      const label = SCALE_LABELS[v] || "";
+      lines.push(`Fråga ${idx+1} | ${q.d} | ${q.t}\nSvar: ${v} (${label})`);
+    });
+    lines.push("");
+    lines.push("Format: Fråga N | Delområde | Frågetext  -> Svar: [1–5] (skalaetikett)");
+    const txtBlob = new Blob([lines.join("\n")], { type: "text/plain;charset=utf-8" });
+    const txtUrl = URL.createObjectURL(txtBlob);
+    els.btnExportTxt.href = txtUrl;
 
     // Draw QoL curve
     drawQoLCurve();
@@ -357,27 +384,21 @@
     c.height = Math.floor(H * dpr);
     ctx.scale(dpr, dpr);
 
-    // Read current total
     const { total } = computeScores();
 
-    // Build points (age 15..90). QoL baseline shaped curve + lift from total score.
     const age = Number(els.age.value || 38);
     const minAge = 15, maxAge = 90;
     const n = 100;
     const points = [];
     for(let k=0;k<n;k++){
       const a = minAge + (k/(n-1))*(maxAge-minAge);
-      // Baseline: mild inverted U with peak around 35
       const baseline = 60 - 0.014 * Math.pow(a - 35, 2); // ~[30..60]
-      // Lift from physical score: maps [0..100] -> [ -5 .. +15 ]
-      const lift = -5 + (total/100)*20;
-      // Center a slight bump around user's age
+      const lift = -5 + (total/100)*20; // map score to [-5..+15]
       const bump = 6 * Math.exp(-Math.pow((a - age)/10, 2));
       const q = Math.max(0, Math.min(100, baseline + lift + bump));
       points.push({x:a, y:q});
     }
 
-    // Padding
     const pad = {l:38, r:12, t:12, b:26};
     const plot = { x: (ax)=> pad.l + (ax-minAge)/(maxAge-minAge)*(W - pad.l - pad.r),
                    y: (qy)=> H - pad.b - (qy/100)*(H - pad.t - pad.b) };
@@ -432,7 +453,7 @@
   });
   els.btnPrint.addEventListener("click", ()=> window.print());
 
-  // Keyboard support: arrows 1..5 to select, Enter to next
+  // Keyboard support: numbers 1..5 to select, Enter to next, Backspace to back
   document.addEventListener("keydown", (e)=>{
     if(!els.screenResults.classList.contains("hidden")){
       if(e.key === "ArrowLeft") els.age.stepDown();
