@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Fysisk hälsa – Skattningstest (25 frågor)</title>
+  <style>
+    :root{
+      --bg:#0b0f1a; --card:#131a2a; --muted:#6b7280; --text:#f3f4f6; --accent:#60a5fa; --ok:#34d399; --warn:#f59e0b; --bad:#ef4444;
+      --bar:#2563eb; --bar-muted:#1f2937;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Helvetica,Arial,sans-serif;
+      background:linear-gradient(120deg,#0b0f1a 0%, #0f172a 100%); color:var(--text);
+      min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px;
+    }
+    .wrap{width:100%; max-width:880px}
+    .card{
+      background:linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+      border:1px solid rgba(255,255,255,0.08); border-radius:18px; box-shadow:0 10px 30px rgba(0,0,0,0.35);
+      overflow:hidden;
+    }
+    header{
+      padding:22px 24px; border-bottom:1px solid rgba(255,255,255,0.06);
+      display:flex; align-items:center; gap:14px; justify-content:space-between; flex-wrap:wrap;
+    }
+    .title{font-weight:700; letter-spacing:.2px; font-size:18px}
+    .badge{font-size:12px; color:#cbd5e1; background:#0b1220; border:1px solid rgba(255,255,255,.08); padding:6px 10px; border-radius:999px}
+    .content{padding:28px}
+    .progress{
+      height:10px; background:rgba(255,255,255,0.06); border-radius:999px; overflow:hidden; margin-bottom:18px; position:relative;
+    }
+    .progress > div{height:100%; width:0%; background:linear-gradient(90deg,#60a5fa,#a78bfa); transition:width .3s ease}
+    .qnum{font-size:14px; color:var(--muted); margin:6px 0 2px}
+    h2{margin:6px 0 18px; font-size:22px; line-height:1.3}
+    .scale{display:grid; grid-template-columns:repeat(5,1fr); gap:12px; margin:18px 0 6px}
+    .scale input{display:none}
+    .opt{
+      display:flex; align-items:center; justify-content:center; gap:8px;
+      padding:16px 10px; border-radius:14px; background:#0c1424; border:1px solid rgba(255,255,255,0.08);
+      cursor:pointer; user-select:none; transition:transform .04s ease, border-color .2s ease, background .2s ease;
+      min-height:56px; text-align:center;
+    }
+    .opt:hover{transform:translateY(-1px); border-color:rgba(96,165,250,.7)}
+    .scale input:checked + .opt{outline:2px solid rgba(96,165,250,.9); border-color:transparent; background:linear-gradient(180deg,rgba(96,165,250,.15),rgba(96,165,250,.05))}
+    .legend{display:flex; justify-content:space-between; font-size:12px; color:#9ca3af; margin-top:6px}
+    .nav{margin-top:24px; display:flex; gap:12px; flex-wrap:wrap}
+    button{
+      appearance:none; border:none; padding:12px 16px; border-radius:12px; font-weight:600; cursor:pointer;
+      background:#0c1424; color:var(--text); border:1px solid rgba(255,255,255,0.08)
+    }
+    .primary{background:linear-gradient(90deg,#2563eb,#7c3aed); border:none}
+    button:disabled{opacity:.5; cursor:not-allowed}
+    .muted{color:var(--muted); font-size:12px; margin-top:6px}
+    .hidden{display:none}
+    /* Results */
+    .grid{display:grid; grid-template-columns:1fr; gap:16px}
+    @media(min-width:820px){ .grid{grid-template-columns:1.1fr .9fr} }
+    .stat{
+      background:#0c1424; border:1px solid rgba(255,255,255,0.08); border-radius:14px; padding:16px
+    }
+    .stat h3{margin:0 0 8px; font-size:16px}
+    .bar{height:14px; background:var(--bar-muted); border-radius:10px; overflow:hidden}
+    .bar > div{height:100%; width:0%; background:linear-gradient(90deg,#2563eb,#60a5fa); transition:width .6s ease}
+    .row{display:grid; grid-template-columns:160px 1fr 52px; gap:12px; align-items:center; margin:10px 0}
+    .kpi{display:flex; gap:12px; align-items:center; margin:2px 0 10px}
+    .kpi .dot{width:10px; height:10px; border-radius:50%}
+    canvas{width:100%; height:260px; background:#0b1220; border:1px solid rgba(255,255,255,0.06); border-radius:12px}
+    .footer{padding:16px 24px; border-top:1px solid rgba(255,255,255,0.06); display:flex; gap:12px; justify-content:space-between; align-items:center; flex-wrap:wrap}
+    a.link{color:#93c5fd; text-decoration:none}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card">
+    <header>
+      <div class="title">Fysisk hälsa – Skattningstest</div>
+      <div class="badge" id="badge">1/25</div>
+    </header>
+
+    <div class="content" id="screen-test">
+      <div class="progress" aria-label="Framsteg">
+        <div id="progressBar"></div>
+      </div>
+
+      <div class="qnum" id="qIndex">Fråga 1 av 25</div>
+      <h2 id="qText">…</h2>
+
+      <form id="form" aria-labelledby="qText">
+        <div class="scale" role="radiogroup" aria-label="Skattningsskala 1 till 5">
+          <!-- Options will be injected -->
+        </div>
+        <div class="legend">
+          <span>1 = stämmer inte alls</span>
+          <span>5 = stämmer helt</span>
+        </div>
+      </form>
+
+      <div class="nav">
+        <button id="btnPrev">Tillbaka</button>
+        <button id="btnNext" class="primary" disabled>Nästa</button>
+      </div>
+      <div class="muted">Svara på varje fråga för att fortsätta. Dina svar lagras endast i din webbläsare.</div>
+    </div>
+
+    <div class="content hidden" id="screen-results">
+      <h2>Resultat</h2>
+      <div class="grid">
+        <section class="stat">
+          <div class="kpi">
+            <div class="dot" id="dotScore"></div>
+            <div>
+              <div class="qnum">Totalpoäng (0–100)</div>
+              <h3 id="totalScore">–</h3>
+            </div>
+          </div>
+          <div class="bar" aria-label="Totalpoäng">
+            <div id="totalBar"></div>
+          </div>
+
+          <h3 style="margin-top:18px">Delområden (0–100)</h3>
+          <div id="domains"></div>
+        </section>
+
+        <section class="stat">
+          <h3>QoL-kurva (hypotetisk) vs ålder</h3>
+          <label class="qnum" for="age">Ålder</label>
+          <input id="age" type="number" min="15" max="100" value="38" style="width:120px; background:#0b1220; color:var(--text); border:1px solid rgba(255,255,255,0.12); border-radius:10px; padding:10px 12px" />
+          <canvas id="qolCanvas" aria-label="QoL-kurva"></canvas>
+          <div class="muted">Kurvan är en förenklad projektion baserad på din fysiska hälsa-poäng, avsedd för coaching/reflektion.</div>
+        </section>
+      </div>
+    </div>
+
+    <div class="footer">
+      <div class="muted">© Fysisk hälsa – 25 frågor</div>
+      <div>
+        <button id="btnRestart">Starta om</button>
+        <button id="btnPrint">Skriv ut</button>
+        <a class="link" id="btnExport" href="#" download="fysisk-halsa-resultat.json">Exportera resultat</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ----- Data -----
+  const QUESTIONS = [
+    // Kost och energi
+    { t: "Jag äter regelbundet och får i mig tillräckligt med energi under dagen.", d:"Kost och energi" },
+    { t: "Jag upplever att min kost är näringsrik och balanserad.", d:"Kost och energi" },
+    { t: "Jag märker att det jag äter påverkar mitt humör och min ork på ett positivt sätt.", d:"Kost och energi" },
+    { t: "Jag undviker ofta matvanor som jag vet försämrar min hälsa.", d:"Kost och energi" },
+    { t: "Jag känner mig nöjd med mina matvanor just nu.", d:"Kost och energi" },
+
+    // Sömn och återhämtning
+    { t: "Jag får tillräckligt med sömn för att känna mig utvilad.", d:"Sömn och återhämtning" },
+    { t: "Jag har en kvällsrutin som gör det lättare att varva ner inför sömn.", d:"Sömn och återhämtning" },
+    { t: "Jag sover ungefär samma tider varje dag.", d:"Sömn och återhämtning" },
+    { t: "Jag vaknar oftast pigg och redo för dagen.", d:"Sömn och återhämtning" },
+    { t: "Jag tar mig tid till återhämtning när min kropp behöver det.", d:"Sömn och återhämtning" },
+
+    // Fysisk aktivitet
+    { t: "Jag rör på mig varje dag, även om det inte är träning.", d:"Fysisk aktivitet" },
+    { t: "Jag tränar regelbundet (minst två gånger i veckan).", d:"Fysisk aktivitet" },
+    { t: "Jag upplever att min träning/rörelse är rolig och motiverande.", d:"Fysisk aktivitet" },
+    { t: "Jag känner mig stark och fysiskt kapabel i vardagen.", d:"Fysisk aktivitet" },
+    { t: "Jag upplever att min kondition är tillräcklig för det jag vill göra.", d:"Fysisk aktivitet" },
+
+    // Vanor och hinder
+    { t: "Jag har god balans mellan aktivitet och vila.", d:"Vanor och hinder" },
+    { t: "Jag lyckas oftast hålla fast vid mina hälsorelaterade vanor.", d:"Vanor och hinder" },
+    { t: "Jag upplever inte att tid är ett stort hinder för att ta hand om min fysiska hälsa.", d:"Vanor och hinder" },
+    { t: "Jag har bra strategier för att hantera stress på ett hälsosamt sätt.", d:"Vanor och hinder" },
+    { t: "Jag tycker att jag har kontroll över min fysiska hälsa i stort.", d:"Vanor och hinder" },
+
+    // Vision och motivation
+    { t: "Jag är nöjd med min nuvarande fysiska form.", d:"Vision och motivation" },
+    { t: "Jag vet vilka små förändringar jag kan göra för att förbättra min hälsa.", d:"Vision och motivation" },
+    { t: "Jag känner mig motiverad att utveckla min fysiska hälsa just nu.", d:"Vision och motivation" },
+    { t: "Jag tror att förbättrad fysisk hälsa skulle påverka mitt liv positivt.", d:"Vision och motivation" },
+    { t: "Jag prioriterar min fysiska hälsa i vardagen.", d:"Vision och motivation" },
+  ];
+
+  const DOMAINS = [
+    "Kost och energi",
+    "Sömn och återhämtning",
+    "Fysisk aktivitet",
+    "Vanor och hinder",
+    "Vision och motivation",
+  ];
+
+  // ----- State -----
+  let i = 0; // current question index
+  const answers = new Array(QUESTIONS.length).fill(null); // 1..5
+  const els = {
+    badge: document.getElementById("badge"),
+    progressBar: document.getElementById("progressBar"),
+    qIndex: document.getElementById("qIndex"),
+    qText: document.getElementById("qText"),
+    form: document.getElementById("form"),
+    scale: null, // created below
+    btnPrev: document.getElementById("btnPrev"),
+    btnNext: document.getElementById("btnNext"),
+    screenTest: document.getElementById("screen-test"),
+    screenResults: document.getElementById("screen-results"),
+    totalScore: document.getElementById("totalScore"),
+    totalBar: document.getElementById("totalBar"),
+    domains: document.getElementById("domains"),
+    dotScore: document.getElementById("dotScore"),
+    age: document.getElementById("age"),
+    canvas: document.getElementById("qolCanvas"),
+    btnRestart: document.getElementById("btnRestart"),
+    btnPrint: document.getElementById("btnPrint"),
+    btnExport: document.getElementById("btnExport"),
+  };
+
+  // Build scale options (1..5)
+  function buildScale(){
+    const wrap = document.createElement("div");
+    wrap.className = "scale";
+    for(let v=1; v<=5; v++){
+      const id = `opt-${v}`;
+      const input = document.createElement("input");
+      input.type = "radio"; input.name = "score"; input.id = id; input.value = v;
+
+      const label = document.createElement("label");
+      label.className = "opt"; label.setAttribute("for", id);
+      label.innerHTML = `<strong>${v}</strong>`;
+
+      wrap.appendChild(input); wrap.appendChild(label);
+    }
+    return wrap;
+  }
+  els.scale = buildScale();
+  els.form.querySelector(".scale")?.remove();
+  els.form.insertBefore(els.scale, els.form.firstChild);
+
+  function setProgress(){
+    const answered = answers.filter(a => a !== null).length;
+    const pct = Math.round((answered / QUESTIONS.length) * 100);
+    els.progressBar.style.width = pct + "%";
+    els.badge.textContent = `${Math.min(i+1, QUESTIONS.length)}/${QUESTIONS.length}`;
+    els.qIndex.textContent = `Fråga ${i+1} av ${QUESTIONS.length}`;
+  }
+
+  function renderQuestion(){
+    const q = QUESTIONS[i];
+    els.qText.textContent = q.t;
+
+    // clear selection
+    [...els.form.querySelectorAll('input[name="score"]')].forEach(r => r.checked = false);
+
+    // restore previous answer
+    if(answers[i] != null){
+      const sel = els.form.querySelector(`#opt-${answers[i]}`);
+      if(sel) sel.checked = true;
+    }
+
+    els.btnPrev.disabled = i === 0;
+    els.btnNext.textContent = (i === QUESTIONS.length - 1) ? "Visa resultat" : "Nästa";
+    els.btnNext.disabled = answers[i] == null;
+
+    setProgress();
+  }
+
+  // Event: selection
+  els.form.addEventListener("change", (e)=>{
+    if(e.target && e.target.name === "score"){
+      answers[i] = Number(e.target.value);
+      els.btnNext.disabled = false;
+    }
+  });
+
+  els.btnPrev.addEventListener("click", ()=>{
+    if(i>0){ i--; renderQuestion(); }
+  });
+
+  els.btnNext.addEventListener("click", ()=>{
+    if(answers[i]==null) return;
+    if(i < QUESTIONS.length - 1){
+      i++; renderQuestion();
+    } else {
+      showResults();
+    }
+  });
+
+  // ----- Scoring -----
+  function normalize100(v){ // v in [1..5] -> [0..100]
+    return ((v - 1) / 4) * 100;
+  }
+
+  function computeScores(){
+    const total = answers.reduce((s,v)=> s + normalize100(v), 0) / answers.length;
+    const byDomain = {};
+    DOMAINS.forEach(d => byDomain[d] = []);
+    QUESTIONS.forEach((q, idx) => byDomain[q.d].push(normalize100(answers[idx])));
+    const domainScores = DOMAINS.map(d => ({
+      name: d,
+      score: byDomain[d].reduce((s,v)=>s+v,0) / byDomain[d].length
+    }));
+    return { total, domainScores };
+  }
+
+  function colorForScore(x){
+    if(x >= 70) return "var(--ok)";
+    if(x >= 40) return "var(--warn)";
+    return "var(--bad)";
+  }
+
+  function showResults(){
+    const { total, domainScores } = computeScores();
+
+    // Switch screens
+    els.screenTest.classList.add("hidden");
+    els.screenResults.classList.remove("hidden");
+
+    const t = Math.round(total);
+    els.totalScore.textContent = `${t} / 100`;
+    els.totalBar.style.width = `${t}%`;
+    els.dotScore.style.background = colorForScore(t);
+
+    // Domains
+    els.domains.innerHTML = "";
+    domainScores.forEach(d=>{
+      const row = document.createElement("div");
+      row.className = "row";
+      row.innerHTML = `
+        <div>${d.name}</div>
+        <div class="bar"><div style="width:${d.score.toFixed(0)}%"></div></div>
+        <div>${d.score.toFixed(0)}</div>
+      `;
+      els.domains.appendChild(row);
+    });
+
+    // Save to localStorage
+    const payload = { answers, total: t, domains: domainScores.map(d=>({name:d.name, score:Math.round(d.score)})), ts: new Date().toISOString() };
+    localStorage.setItem("fysisk_halsa_v1", JSON.stringify(payload));
+
+    // Export link
+    const blob = new Blob([JSON.stringify(payload, null, 2)], {type:"application/json"});
+    const url = URL.createObjectURL(blob);
+    els.btnExport.href = url;
+
+    // Draw QoL curve
+    drawQoLCurve();
+  }
+
+  // ----- QoL curve (simple canvas line chart, no libs) -----
+  function drawQoLCurve(){
+    const c = els.canvas;
+    const ctx = c.getContext("2d");
+    const W = c.clientWidth, H = c.clientHeight;
+    const dpr = window.devicePixelRatio || 1;
+    c.width = Math.floor(W * dpr);
+    c.height = Math.floor(H * dpr);
+    ctx.scale(dpr, dpr);
+
+    // Read current total
+    const { total } = computeScores();
+
+    // Build points (age 15..90). QoL baseline shaped curve + lift from total score.
+    const age = Number(els.age.value || 38);
+    const minAge = 15, maxAge = 90;
+    const n = 100;
+    const points = [];
+    for(let k=0;k<n;k++){
+      const a = minAge + (k/(n-1))*(maxAge-minAge);
+      // Baseline: mild inverted U with peak around 35
+      const baseline = 60 - 0.014 * Math.pow(a - 35, 2); // ~[30..60]
+      // Lift from physical score: maps [0..100] -> [ -5 .. +15 ]
+      const lift = -5 + (total/100)*20;
+      // Center a slight bump around user's age
+      const bump = 6 * Math.exp(-Math.pow((a - age)/10, 2));
+      const q = Math.max(0, Math.min(100, baseline + lift + bump));
+      points.push({x:a, y:q});
+    }
+
+    // Padding
+    const pad = {l:38, r:12, t:12, b:26};
+    const plot = { x: (ax)=> pad.l + (ax-minAge)/(maxAge-minAge)*(W - pad.l - pad.r),
+                   y: (qy)=> H - pad.b - (qy/100)*(H - pad.t - pad.b) };
+
+    // Background grid
+    ctx.clearRect(0,0,W,H);
+    ctx.fillStyle = "#0b1220"; ctx.fillRect(0,0,W,H);
+    ctx.strokeStyle = "rgba(255,255,255,0.08)"; ctx.lineWidth = 1;
+    for(let gy=0; gy<=100; gy+=20){
+      const y = plot.y(gy);
+      ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(W - pad.r, y); ctx.stroke();
+      ctx.fillStyle = "rgba(203,213,225,0.5)";
+      ctx.font = "12px system-ui"; ctx.fillText(gy.toString(), 6, y+4);
+    }
+    for(let ga=minAge; ga<=maxAge; ga+=5){
+      const x = plot.x(ga);
+      ctx.beginPath(); ctx.moveTo(x, pad.t); ctx.lineTo(x, H - pad.b); ctx.stroke();
+      if(ga % 10 === 0){
+        ctx.fillStyle = "rgba(203,213,225,0.5)";
+        ctx.fillText(ga.toString(), x-8, H-6);
+      }
+    }
+
+    // Line
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = "#60a5fa";
+    ctx.beginPath();
+    points.forEach((p,idx)=>{
+      const x = plot.x(p.x), y = plot.y(p.y);
+      if(idx===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+    });
+    ctx.stroke();
+
+    // Current age marker
+    const px = plot.x(age);
+    ctx.strokeStyle = "rgba(96,165,250,0.6)";
+    ctx.beginPath(); ctx.moveTo(px, pad.t); ctx.lineTo(px, H - pad.b); ctx.stroke();
+
+    // Legend
+    ctx.fillStyle = "rgba(148,163,184,0.9)";
+    ctx.fillText("QoL (0–100)", W - 94, pad.t + 12);
+  }
+
+  // Redraw curve when age changes
+  els.age.addEventListener("input", drawQoLCurve);
+
+  // Buttons footer
+  els.btnRestart.addEventListener("click", ()=>{
+    for(let k=0;k<answers.length;k++) answers[k]=null;
+    i=0; els.screenResults.classList.add("hidden"); els.screenTest.classList.remove("hidden");
+    renderQuestion();
+  });
+  els.btnPrint.addEventListener("click", ()=> window.print());
+
+  // Keyboard support: arrows 1..5 to select, Enter to next
+  document.addEventListener("keydown", (e)=>{
+    if(!els.screenResults.classList.contains("hidden")){
+      if(e.key === "ArrowLeft") els.age.stepDown();
+      if(e.key === "ArrowRight") els.age.stepUp();
+      return;
+    }
+    if(e.key>="1" && e.key<="5"){
+      const r = els.form.querySelector(`#opt-${e.key}`);
+      if(r){ r.checked = true; answers[i] = Number(e.key); els.btnNext.disabled = false; }
+    }
+    if(e.key === "Enter"){
+      e.preventDefault();
+      if(!els.btnNext.disabled) els.btnNext.click();
+    }
+    if(e.key === "Backspace"){ if(i>0) els.btnPrev.click(); }
+  });
+
+  // Init
+  renderQuestion();
+</script>
+</body>
+</html>
