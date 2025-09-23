@@ -6,7 +6,7 @@
   <title>Fysisk hälsa – Skattningstest (25 frågor)</title>
   <style>
     :root{
-      --bg:#0b0f1a; --card:#131a2a; --muted:#6b7280; --text:#f3f4f6; --accent:#60a5fa; --ok:#34d399; --warn:#f59e0b; --bad:#ef4444;
+      --bg:#0b0f1a; --card:#131a2a; --muted:#6b7280; --text:#f3f4f6; --ok:#34d399; --warn:#f59e0b; --bad:#ef4444;
       --bar:#2563eb; --bar-muted:#1f2937;
     }
     *{box-sizing:border-box}
@@ -56,7 +56,6 @@
     .hidden{display:none}
     /* Results */
     .grid{display:grid; grid-template-columns:1fr; gap:16px}
-    @media(min-width:820px){ .grid{grid-template-columns:1.1fr .9fr} }
     .stat{
       background:#0c1424; border:1px solid rgba(255,255,255,0.08); border-radius:14px; padding:16px
     }
@@ -66,9 +65,21 @@
     .row{display:grid; grid-template-columns:160px 1fr 52px; gap:12px; align-items:center; margin:10px 0}
     .kpi{display:flex; gap:12px; align-items:center; margin:2px 0 10px}
     .kpi .dot{width:10px; height:10px; border-radius:50%}
-    canvas{width:100%; height:260px; background:#0b1220; border:1px solid rgba(255,255,255,0.06); border-radius:12px}
+    .answers{margin:6px 0 0 18px; padding:0}
+    .answers li{margin:8px 0; line-height:1.4}
     .footer{padding:16px 24px; border-top:1px solid rgba(255,255,255,0.06); display:flex; gap:12px; justify-content:space-between; align-items:center; flex-wrap:wrap}
     a.link{color:#93c5fd; text-decoration:none}
+
+    /* Utskriftsvänligt */
+    @media print{
+      body{background:white; color:black}
+      .card{border:none; box-shadow:none}
+      header .badge, .nav, .footer a, .footer button, .progress{display:none !important}
+      .content{padding:0}
+      .stat{background:white; border:none; padding:0}
+      .row{grid-template-columns:200px 1fr 60px}
+      .footer{display:none}
+    }
   </style>
 </head>
 <body>
@@ -122,11 +133,9 @@
         </section>
 
         <section class="stat">
-          <h3>QoL-kurva (hypotetisk) vs ålder</h3>
-          <label class="qnum" for="age">Ålder</label>
-          <input id="age" type="number" min="15" max="100" value="38" style="width:120px; background:#0b1220; color:var(--text); border:1px solid rgba(255,255,255,0.12); border-radius:10px; padding:10px 12px" />
-          <canvas id="qolCanvas" aria-label="QoL-kurva"></canvas>
-          <div class="muted">Kurvan är en förenklad projektion baserad på din fysiska hälsa-poäng, avsedd för coaching/reflektion.</div>
+          <h3>Svar per fråga</h3>
+          <ol id="answersList" class="answers"></ol>
+          <div class="muted">Varje rad visar frågenummer, delområde, frågetext och ditt siffersvar (1–5) med skalaetikett.</div>
         </section>
       </div>
     </div>
@@ -190,6 +199,14 @@
     "Vision och motivation",
   ];
 
+  const SCALE_LABELS = {
+    1: "Stämmer inte alls",
+    2: "Stämmer lite",
+    3: "Neutral / delvis",
+    4: "Stämmer mycket",
+    5: "Stämmer helt"
+  };
+
   // ----- State -----
   let i = 0; // current question index
   const answers = new Array(QUESTIONS.length).fill(null); // 1..5
@@ -208,8 +225,7 @@
     totalBar: document.getElementById("totalBar"),
     domains: document.getElementById("domains"),
     dotScore: document.getElementById("dotScore"),
-    age: document.getElementById("age"),
-    canvas: document.getElementById("qolCanvas"),
+    answersList: document.getElementById("answersList"),
     btnRestart: document.getElementById("btnRestart"),
     btnPrint: document.getElementById("btnPrint"),
     btnExport: document.getElementById("btnExport"),
@@ -338,19 +354,12 @@
     const payload = { answers, total: t, domains: domainScores.map(d=>({name:d.name, score:Math.round(d.score)})), ts: new Date().toISOString() };
     localStorage.setItem("fysisk_halsa_v1", JSON.stringify(payload));
 
-    // ----- JSON export -----
+    // JSON export
     const blob = new Blob([JSON.stringify(payload, null, 2)], {type:"application/json"});
     const url = URL.createObjectURL(blob);
     els.btnExport.href = url;
 
-    // ----- TXT export -----
-    const SCALE_LABELS = {
-      1: "Stämmer inte alls",
-      2: "Stämmer lite",
-      3: "Neutral / delvis",
-      4: "Stämmer mycket",
-      5: "Stämmer helt"
-    };
+    // TXT export
     let lines = [];
     lines.push("FYSISK HÄLSA – 25 FRÅGOR (1–5)");
     lines.push(`Tidsstämpel: ${payload.ts}`);
@@ -359,91 +368,23 @@
     payload.domains.forEach(d => lines.push(`- ${d.name}: ${d.score}`));
     lines.push("");
     lines.push("SVAR (fråga i klartext följt av siffersvar och etikett):");
+    els.answersList.innerHTML = ""; // bygg listan för visning + utskrift
     QUESTIONS.forEach((q, idx) => {
       const v = answers[idx];
       const label = SCALE_LABELS[v] || "";
+      // För TXT
       lines.push(`Fråga ${idx+1} | ${q.d} | ${q.t}\nSvar: ${v} (${label})`);
+      // För visning/utskrift
+      const li = document.createElement("li");
+      li.textContent = `Fråga ${idx+1} | ${q.d} | ${q.t} — Svar: ${v} (${label})`;
+      els.answersList.appendChild(li);
     });
     lines.push("");
     lines.push("Format: Fråga N | Delområde | Frågetext  -> Svar: [1–5] (skalaetikett)");
     const txtBlob = new Blob([lines.join("\n")], { type: "text/plain;charset=utf-8" });
     const txtUrl = URL.createObjectURL(txtBlob);
     els.btnExportTxt.href = txtUrl;
-
-    // Draw QoL curve
-    drawQoLCurve();
   }
-
-  // ----- QoL curve (simple canvas line chart, no libs) -----
-  function drawQoLCurve(){
-    const c = els.canvas;
-    const ctx = c.getContext("2d");
-    const W = c.clientWidth, H = c.clientHeight;
-    const dpr = window.devicePixelRatio || 1;
-    c.width = Math.floor(W * dpr);
-    c.height = Math.floor(H * dpr);
-    ctx.scale(dpr, dpr);
-
-    const { total } = computeScores();
-
-    const age = Number(els.age.value || 38);
-    const minAge = 15, maxAge = 90;
-    const n = 100;
-    const points = [];
-    for(let k=0;k<n;k++){
-      const a = minAge + (k/(n-1))*(maxAge-minAge);
-      const baseline = 60 - 0.014 * Math.pow(a - 35, 2); // ~[30..60]
-      const lift = -5 + (total/100)*20; // map score to [-5..+15]
-      const bump = 6 * Math.exp(-Math.pow((a - age)/10, 2));
-      const q = Math.max(0, Math.min(100, baseline + lift + bump));
-      points.push({x:a, y:q});
-    }
-
-    const pad = {l:38, r:12, t:12, b:26};
-    const plot = { x: (ax)=> pad.l + (ax-minAge)/(maxAge-minAge)*(W - pad.l - pad.r),
-                   y: (qy)=> H - pad.b - (qy/100)*(H - pad.t - pad.b) };
-
-    // Background grid
-    ctx.clearRect(0,0,W,H);
-    ctx.fillStyle = "#0b1220"; ctx.fillRect(0,0,W,H);
-    ctx.strokeStyle = "rgba(255,255,255,0.08)"; ctx.lineWidth = 1;
-    for(let gy=0; gy<=100; gy+=20){
-      const y = plot.y(gy);
-      ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(W - pad.r, y); ctx.stroke();
-      ctx.fillStyle = "rgba(203,213,225,0.5)";
-      ctx.font = "12px system-ui"; ctx.fillText(gy.toString(), 6, y+4);
-    }
-    for(let ga=minAge; ga<=maxAge; ga+=5){
-      const x = plot.x(ga);
-      ctx.beginPath(); ctx.moveTo(x, pad.t); ctx.lineTo(x, H - pad.b); ctx.stroke();
-      if(ga % 10 === 0){
-        ctx.fillStyle = "rgba(203,213,225,0.5)";
-        ctx.fillText(ga.toString(), x-8, H-6);
-      }
-    }
-
-    // Line
-    ctx.lineWidth = 2;
-    ctx.strokeStyle = "#60a5fa";
-    ctx.beginPath();
-    points.forEach((p,idx)=>{
-      const x = plot.x(p.x), y = plot.y(p.y);
-      if(idx===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
-    });
-    ctx.stroke();
-
-    // Current age marker
-    const px = plot.x(age);
-    ctx.strokeStyle = "rgba(96,165,250,0.6)";
-    ctx.beginPath(); ctx.moveTo(px, pad.t); ctx.lineTo(px, H - pad.b); ctx.stroke();
-
-    // Legend
-    ctx.fillStyle = "rgba(148,163,184,0.9)";
-    ctx.fillText("QoL (0–100)", W - 94, pad.t + 12);
-  }
-
-  // Redraw curve when age changes
-  els.age.addEventListener("input", drawQoLCurve);
 
   // Buttons footer
   els.btnRestart.addEventListener("click", ()=>{
@@ -451,14 +392,24 @@
     i=0; els.screenResults.classList.add("hidden"); els.screenTest.classList.remove("hidden");
     renderQuestion();
   });
-  els.btnPrint.addEventListener("click", ()=> window.print());
+
+  els.btnPrint.addEventListener("click", ()=>{
+    // Om alla frågor är besvarade och vi är kvar i testvyn, växla till resultat innan utskrift
+    const allAnswered = answers.every(a => a !== null);
+    if(els.screenTest && !els.screenTest.classList.contains("hidden") && allAnswered){
+      showResults();
+      setTimeout(()=>window.print(), 50);
+    } else if(els.screenResults && !els.screenResults.classList.contains("hidden")){
+      window.print();
+    } else {
+      alert("Besvara alla frågor för att skriva ut resultat med alla svar.");
+    }
+  });
 
   // Keyboard support: numbers 1..5 to select, Enter to next, Backspace to back
   document.addEventListener("keydown", (e)=>{
     if(!els.screenResults.classList.contains("hidden")){
-      if(e.key === "ArrowLeft") els.age.stepDown();
-      if(e.key === "ArrowRight") els.age.stepUp();
-      return;
+      return; // inga specialtangenter i resultatläge
     }
     if(e.key>="1" && e.key<="5"){
       const r = els.form.querySelector(`#opt-${e.key}`);
